@@ -87,4 +87,32 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    return db_user
+    return  db_user
+
+
+# Pydantic model for creating a post
+class PostCreate(BaseModel):
+    title: str
+    content: str
+    author_id: int
+    is_published: bool = True   
+
+
+@app.post("/createPost", status_code=201)
+def create_post(post: PostCreate, db: Session = Depends(get_db)):
+    # Check if author exists
+    author = db.query(models.User).filter(models.User.id == post.author_id).first()
+    if not author:
+        raise HTTPException(status_code=404, detail=f"Author with id '{post.author_id}' not found")
+    
+    # Create new post
+    db_post = models.Post(
+        title=post.title,
+        content=post.content,
+        author_id=post.author_id,
+        is_published=post.is_published
+    )
+    db.add(db_post)
+    db.commit()
+    db.refresh(db_post)
+    return db_post
