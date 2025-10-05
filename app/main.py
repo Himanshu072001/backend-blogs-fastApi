@@ -55,7 +55,7 @@ def get_all_likes(db: Session = Depends(get_db)):
 
 
 
-## Create new records in each table Operations
+## ------------ Create new records in each table Operations ---------------    ##
 # Pydantic models for request bodies
 class UserCreate(BaseModel):
     name: str
@@ -67,12 +67,12 @@ class UserCreate(BaseModel):
 @app.post("/createUser", status_code=201)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
    
-    # Raise error if email already exists
+    # Raise error if email already exists [Primary Key check]
     existing_user = db.query(models.User).filter(models.User.email == user.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already exists")
     
-     # Raise error if user_name already exists
+     # Raise error if user_name already exists [Primary Key check]
     if db.query(models.User).filter(models.User.user_name == user.user_name).first():
         raise HTTPException(status_code=400, detail="User name already exists")
     
@@ -116,3 +116,25 @@ def create_post(post: PostCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_post)
     return db_post
+
+
+## ---------------------- Get User & Post by ID Operations --------------------- ##
+
+# Get user by ID
+@app.get("/getUser/{user_id}")
+def get_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"User with id '{user_id}' not found")
+    return user
+
+# Get post by ID
+@app.get("/getPost/{post_id}")
+def get_post(post_id: int, db: Session = Depends(get_db)):
+    post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail = f"Post with id '{post_id}' not found" )
+    return post
+
+
+## ---------------------- Update User & Post by ID Operations --------------------- ##
