@@ -118,6 +118,68 @@ def create_post(post: PostCreate, db: Session = Depends(get_db)):
     return db_post
 
 
+#Pydantic model for creating a comment
+class CommentCreate(BaseModel):
+    content: str
+    post_id: int
+    author_id: int
+
+
+@app.post("/createComment", status_code=201)
+def create_comment(comment: CommentCreate, db: Session = Depends(get_db)):
+    # Check if post exists
+    post = db.query(models.Post).filter(models.Post.id == comment.post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail=f"Post with id '{comment.post_id}' not found")
+    
+    # Check if author exists
+    author = db.query(models.User).filter(models.User.id == comment.author_id).first()
+    if not author:
+        raise HTTPException(status_code=404, detail=f"Author with id '{comment.author_id}' not found")
+    
+    # Create new comment
+    db_comment = models.Comment(
+        content=comment.content,
+        post_id=comment.post_id,
+        author_id=comment.author_id
+    )
+    db.add(db_comment)
+    db.commit()
+    db.refresh(db_comment)
+    return db_comment
+
+
+
+# Pydantic model for creating a like
+class LikeCreate(BaseModel):
+    post_id: int
+    user_id: int 
+
+
+@app.post("/createLike", status_code=201)
+def create_like(like: LikeCreate, db: Session = Depends(get_db)):
+    # Check if post exists
+    post = db.query(models.Post).filter(models.Post.id == like.post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail=f"Post with id '{like.post_id}' not found")
+    
+    # Check if user exists
+    user = db.query(models.User).filter(models.User.id == like.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"User with id '{like.user_id}' not found")
+    
+    # Create new like
+    db_like = models.Like(
+        post_id=like.post_id,
+        user_id=like.user_id
+    )
+    db.add(db_like)
+    db.commit()
+    db.refresh(db_like)
+    return db_like
+
+
+
 ## ---------------------- Get User & Post by ID Operations --------------------- ##
 
 # Get user by ID
@@ -136,5 +198,24 @@ def get_post(post_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail = f"Post with id '{post_id}' not found" )
     return post
 
+# Get comment by ID
+@app.get("/getComment/{comment_id}")
+def get_comment(comment_id: int, db: Session = Depends(get_db)):
+    comment = db.query(models.Comment).filter(models.Comment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail = f"Comment with id '{comment_id}' not found" )
+    return comment
+
+# Get like by ID
+@app.get("/getLike/{like_id}")
+def get_like(like_id: int, db: Session = Depends(get_db)):
+    like = db.query(models.Like).filter(models.Like.id == like_id).first()
+    if not like:
+        raise HTTPException(status_code=404, detail = f"Like with id '{like_id}' not found" )
+    return like 
+
+
+
 
 ## ---------------------- Update User & Post by ID Operations --------------------- ##
+
