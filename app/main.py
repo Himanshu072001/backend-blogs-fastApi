@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Depends, Response, HTTPException
-from pydantic import BaseModel
 from . import models
 from .database import engine, SessionLocal, get_db 
 from sqlalchemy.orm import Session
+from .schemas import UserCreate, PostCreate, CommentCreate, LikeCreate
 
 # Create the database tables
 models.Base.metadata.create_all(bind=engine)
@@ -56,13 +56,6 @@ def get_all_likes(db: Session = Depends(get_db)):
 
 
 ## ------------ Create new records in each table Operations ---------------    ##
-# Pydantic models for request bodies
-class UserCreate(BaseModel):
-    name: str
-    email: str
-    password: str
-    user_name: str
-    bio: str = None
 
 @app.post("/createUser", status_code=201)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -89,13 +82,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return  db_user
 
-
-# Pydantic model for creating a post
-class PostCreate(BaseModel):
-    title: str
-    content: str
-    author_id: int
-    is_published: bool = True   
+ 
 
 
 @app.post("/createPost", status_code=201)
@@ -117,12 +104,6 @@ def create_post(post: PostCreate, db: Session = Depends(get_db)):
     db.refresh(db_post)
     return db_post
 
-
-#Pydantic model for creating a comment
-class CommentCreate(BaseModel):
-    content: str
-    post_id: int
-    author_id: int
 
 
 @app.post("/createComment", status_code=201)
@@ -147,13 +128,6 @@ def create_comment(comment: CommentCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_comment)
     return db_comment
-
-
-
-# Pydantic model for creating a like
-class LikeCreate(BaseModel):
-    post_id: int
-    user_id: int 
 
 
 @app.post("/createLike", status_code=201)
@@ -257,3 +231,52 @@ def update_post(post_id: int, post: PostCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_post)
     return db_post
+
+
+
+## ---------------------- Delete User & Post by ID Operations --------------------- ##
+
+# Delete user by ID
+@app.delete("/deleteUser/{user_id}", status_code=204)
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail=f"User with id '{user_id}' not found")
+    
+    db.delete(db_user)
+    db.commit()
+    return Response(status_code=204)
+
+
+# Delete post by ID
+@app.delete("/deletePost/{post_id}", status_code=204)
+def delete_post(post_id: int, db: Session = Depends(get_db)):
+    db_post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    if not db_post:
+        raise HTTPException(status_code=404, detail=f"Post with id '{post_id}' not found")
+    
+    db.delete(db_post)
+    db.commit()
+    return Response(status_code=204)
+
+# Delete comment by ID
+@app.delete("/deleteComment/{comment_id}", status_code=204)
+def delete_comment(comment_id: int, db: Session = Depends(get_db)):
+    db_comment = db.query(models.Comment).filter(models.Comment.id == comment_id).first()
+    if not db_comment:
+        raise HTTPException(status_code=404, detail=f"Comment with id '{comment_id}' not found")
+    
+    db.delete(db_comment)
+    db.commit()
+    return Response(status_code=204)
+
+# Delete like by ID
+@app.delete("/deleteLike/{like_id}", status_code=204)
+def delete_like(like_id: int, db: Session = Depends(get_db)):
+    db_like = db.query(models.Like).filter(models.Like.id == like_id).first()
+    if not db_like:
+        raise HTTPException(status_code=404, detail=f"Like with id '{like_id}' not found")
+    
+    db.delete(db_like)
+    db.commit()
+    return Response(status_code=204)
