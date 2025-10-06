@@ -219,3 +219,41 @@ def get_like(like_id: int, db: Session = Depends(get_db)):
 
 ## ---------------------- Update User & Post by ID Operations --------------------- ##
 
+# Update user by ID
+# TODO: Optional Params for update
+@app.put("/updateUser/{user_id}")
+def update_user(user_id: int, user: UserCreate, db: Session = Depends(get_db)):
+    # Fetch the user to be updated
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail=f"User with id '{user_id}' not found")
+    
+    # Update user fields
+    db_user.name = user.name
+    db_user.email = user.email
+    db_user.password = user.password
+    db_user.user_name = user.user_name
+    db_user.bio = user.bio
+
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+# Update post by ID
+@app.put("/updatePost/{post_id}")
+def update_post(post_id: int, post: PostCreate, db: Session = Depends(get_db)):
+    # Fetch the post to be updated
+    db_post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    if not db_post:
+        raise HTTPException(status_code=404, detail=f"Post with id '{post_id}' not found")
+    
+    # Update post fields
+    db_post.title = post.title
+    db_post.content = post.content
+    db_post.author_id = post.author_id
+    db_post.is_published = post.is_published
+
+    db.commit()
+    db.refresh(db_post)
+    return db_post
