@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, Response, HTTPException
 from . import models
+from .utils.auth import hash_password
 from .database import engine, SessionLocal, get_db 
 from sqlalchemy.orm import Session
 from .schemas import UserCreate, PostCreate, CommentCreate, LikeCreate, UserResponse, PostResponse, CommentResponse, LikeResponse
@@ -69,7 +70,13 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     if db.query(models.User).filter(models.User.user_name == user.user_name).first():
         raise HTTPException(status_code=400, detail="User name already exists")
     
-    # Create new user
+    # Hash the password before storing [Not Working Showing error]
+    #--Error: password cannot be longer than 72 bytes,
+    #hassed_password = hash_password(user.password)
+    #user.password = hassed_password # Store hashed password
+    
+
+    # Create new user with hashed password
     db_user = models.User(
         name=user.name,
         email=user.email,
