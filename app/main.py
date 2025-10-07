@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, Response, HTTPException
 from . import models
 from .database import engine, SessionLocal, get_db 
 from sqlalchemy.orm import Session
-from .schemas import UserCreate, PostCreate, CommentCreate, LikeCreate
+from .schemas import UserCreate, PostCreate, CommentCreate, LikeCreate, UserResponse, PostResponse, CommentResponse, LikeResponse
 
 # Create the database tables
 models.Base.metadata.create_all(bind=engine)
@@ -22,7 +22,7 @@ def read_root():
 
 ## Fetch all records from each table Operations
 # Sample endpoint to fetch all posts
-@app.get("/allPosts")
+@app.get("/allPosts", status_code=200, response_model=list[PostResponse])
 def get_all_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
     if not posts:
@@ -30,7 +30,7 @@ def get_all_posts(db: Session = Depends(get_db)):
     return posts
 
 # Sample endpoint to fetch all users
-@app.get("/allUsers")
+@app.get("/allUsers", status_code=200, response_model=list[UserResponse])
 def get_all_users(db: Session = Depends(get_db)):
     users = db.query(models.User).all()
     if not users:
@@ -38,7 +38,7 @@ def get_all_users(db: Session = Depends(get_db)):
     return users
 
 # Sample endpoint to fetch all comments
-@app.get("/allComments")
+@app.get("/allComments", status_code=200, response_model=list[CommentResponse])
 def get_all_comments(db: Session = Depends(get_db)):
     comments = db.query(models.Comment).all()
     if not comments:
@@ -46,7 +46,7 @@ def get_all_comments(db: Session = Depends(get_db)):
     return comments
 
 # Sample endpoint to fetch all likes
-@app.get("/allLikes")
+@app.get("/allLikes", status_code=200 , response_model=list[LikeResponse])
 def get_all_likes(db: Session = Depends(get_db)):
     likes = db.query(models.Like).all()
     if not likes:
@@ -57,7 +57,7 @@ def get_all_likes(db: Session = Depends(get_db)):
 
 ## ------------ Create new records in each table Operations ---------------    ##
 
-@app.post("/createUser", status_code=201)
+@app.post("/createUser", status_code=201, response_model=UserResponse)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
    
     # Raise error if email already exists [Primary Key check]
@@ -85,7 +85,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
  
 
 
-@app.post("/createPost", status_code=201)
+@app.post("/createPost", status_code=201, response_model=PostResponse)
 def create_post(post: PostCreate, db: Session = Depends(get_db)):
     # Check if author exists
     author = db.query(models.User).filter(models.User.id == post.author_id).first()
@@ -106,7 +106,7 @@ def create_post(post: PostCreate, db: Session = Depends(get_db)):
 
 
 
-@app.post("/createComment", status_code=201)
+@app.post("/createComment", status_code=201, response_model=CommentResponse)
 def create_comment(comment: CommentCreate, db: Session = Depends(get_db)):
     # Check if post exists
     post = db.query(models.Post).filter(models.Post.id == comment.post_id).first()
@@ -130,7 +130,7 @@ def create_comment(comment: CommentCreate, db: Session = Depends(get_db)):
     return db_comment
 
 
-@app.post("/createLike", status_code=201)
+@app.post("/createLike", status_code=201, response_model=LikeResponse)
 def create_like(like: LikeCreate, db: Session = Depends(get_db)):
     # Check if post exists
     post = db.query(models.Post).filter(models.Post.id == like.post_id).first()
@@ -157,7 +157,7 @@ def create_like(like: LikeCreate, db: Session = Depends(get_db)):
 ## ---------------------- Get User & Post by ID Operations --------------------- ##
 
 # Get user by ID
-@app.get("/getUser/{user_id}")
+@app.get("/getUser/{user_id}", status_code=200, response_model=UserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
@@ -165,7 +165,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     return user
 
 # Get post by ID
-@app.get("/getPost/{post_id}")
+@app.get("/getPost/{post_id}", status_code=200, response_model=PostResponse)
 def get_post(post_id: int, db: Session = Depends(get_db)):
     post = db.query(models.Post).filter(models.Post.id == post_id).first()
     if not post:
@@ -173,7 +173,7 @@ def get_post(post_id: int, db: Session = Depends(get_db)):
     return post
 
 # Get comment by ID
-@app.get("/getComment/{comment_id}")
+@app.get("/getComment/{comment_id}", status_code=200, response_model=CommentResponse)
 def get_comment(comment_id: int, db: Session = Depends(get_db)):
     comment = db.query(models.Comment).filter(models.Comment.id == comment_id).first()
     if not comment:
@@ -181,7 +181,7 @@ def get_comment(comment_id: int, db: Session = Depends(get_db)):
     return comment
 
 # Get like by ID
-@app.get("/getLike/{like_id}")
+@app.get("/getLike/{like_id}", status_code=200, response_model=LikeResponse)
 def get_like(like_id: int, db: Session = Depends(get_db)):
     like = db.query(models.Like).filter(models.Like.id == like_id).first()
     if not like:
@@ -195,7 +195,7 @@ def get_like(like_id: int, db: Session = Depends(get_db)):
 
 # Update user by ID
 # TODO: Optional Params for update
-@app.put("/updateUser/{user_id}")
+@app.put("/updateUser/{user_id}", status_code=200, response_model=UserResponse)
 def update_user(user_id: int, user: UserCreate, db: Session = Depends(get_db)):
     # Fetch the user to be updated
     db_user = db.query(models.User).filter(models.User.id == user_id).first()
@@ -215,7 +215,7 @@ def update_user(user_id: int, user: UserCreate, db: Session = Depends(get_db)):
 
 
 # Update post by ID
-@app.put("/updatePost/{post_id}")
+@app.put("/updatePost/{post_id}", status_code=200, response_model=PostResponse)
 def update_post(post_id: int, post: PostCreate, db: Session = Depends(get_db)):
     # Fetch the post to be updated
     db_post = db.query(models.Post).filter(models.Post.id == post_id).first()
