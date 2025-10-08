@@ -25,4 +25,3 @@ app.include_router(likes.router, prefix="/likes", tags=["Likes"])
 def read_root():
     return {"message": "Hello, FastAPI!"}
 
-

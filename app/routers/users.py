@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, Response, HTTPException, APIRouter
 from .. import models
+from app.utils.auth import hash_password
 from ..database import get_db 
 from sqlalchemy.orm import Session
 from ..schemas import UserCreate, UserResponse
@@ -20,8 +21,10 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     
     # Hash the password before storing [Not Working Showing error]
     #--Error: password cannot be longer than 72 bytes,
-    #hassed_password = hash_password(user.password)
-    #user.password = hassed_password # Store hashed password
+    print(user.password )
+    hassed_password = hash_password(user.password)
+    print(hassed_password)
+    user.password = hassed_password # Store hashed password
     
 
     # Create new user with hashed password
